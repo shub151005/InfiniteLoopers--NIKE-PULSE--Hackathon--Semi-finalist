@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-from prophet import Prophet
 import warnings
 
 # 1. SETUP: Ignore math warnings and initialize the AI Senses
@@ -18,6 +17,7 @@ app.add_middleware(
     allow_methods=["*"],  # Allows GET, POST, etc.
     allow_headers=["*"],
 )
+
 @app.get("/api/hype")
 def get_live_hype():
     """Reads social_data.csv and calculates the leaderboard LIVE"""
@@ -35,33 +35,39 @@ def get_live_hype():
         leaderboard.append({
             "rank": i,
             "region": f"{reg} - {sub}",
-            "score": f"{score:+.2f}",
-            "status": "🔥 HIGH HYPE" if score > 0.2 else "😐 NEUTRAL"
+            "score": f"{score:.2f} Hype"
         })
-    return {"leaderboard": leaderboard}
+    return leaderboard
+
+@app.get("/api/shield")
+def get_shield_stats():
+    # Simulated Live Telemetry
+    return {
+        "status": "Active",
+        "bots_blocked": 1402,
+        "threat_level": "Low"
+    }
 
 @app.get("/api/allocation")
 def get_live_allocation():
-    """Runs the Facebook Prophet Brain LIVE on 112,000 records"""
-    print("🔮 Running Live Prophet Forecast...")
+    """Bypass Protocol: Lightweight Statistical Baseline + Live Hype"""
+    print("🔮 Running Allocation Matrix (Lightweight Mode)...")
     
-    # A. Load Sales Data
+    # A. Load Historical Sales
     df_sales = pd.read_csv('mock_sales.csv')
-    df_sales['ds'] = pd.to_datetime(df_sales['ds'])
     
-    # B. Filter for Bandra (Our Demo Target)
-    geo_data = df_sales[df_sales['sub_region'] == 'Bandra'][['ds', 'y']].groupby('ds').sum().reset_index()
+    # B. Filter for Target Region (Bandra)
+    geo_data = df_sales[(df_sales['region'] == 'India') & (df_sales['sub_region'] == 'Bandra')][['ds', 'y']].groupby('ds').sum().reset_index()
     
-    # C. Train Prophet (The "Brain" part)
-    m = Prophet(weekly_seasonality=True, daily_seasonality=False, yearly_seasonality=False)
-    m.fit(geo_data)
+    # C. The "Prophet Bypass" (Statistical Moving Average)
+    # Instead of compiling C++, we use a 7-day historical average to generate the baseline.
+    geo_data = geo_data.sort_values('ds')
+    if len(geo_data) >= 7:
+        baseline = int(geo_data['y'].tail(7).mean())
+    else:
+        baseline = int(geo_data['y'].mean()) # Fallback
     
-    # D. Predict Tomorrow
-    future = m.make_future_dataframe(periods=1)
-    forecast = m.predict(future)
-    baseline = int(forecast.iloc[-1]['yhat'])
-    
-    # E. Calculate Multiplier from Social Data
+    # D. Calculate Multiplier from Social Data (VADER is still working!)
     df_social = pd.read_csv('social_data.csv')
     bandra_score = df_social[df_social['sub_region'] == 'Bandra']['raw_text'].apply(
         lambda x: analyzer.polarity_scores(str(x))['compound']
@@ -78,20 +84,3 @@ def get_live_allocation():
         "final_approved_allocation": final,
         "delta": f"+{final - baseline} Pairs"
     }
-
-@app.get("/api/shield")
-def get_shield_stats():
-    # Simulated Live Telemetry
-    return {
-        "total_requests": 1540,
-        "bots_blocked": 1512,
-        "humans_verified": 28,
-        "recent_blocks": [{"id": "bot_99", "location": "Mumbai", "reason": "Non-Human Latency"}]
-    }
-
-import os
-import uvicorn
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
