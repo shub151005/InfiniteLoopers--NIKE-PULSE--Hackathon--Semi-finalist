@@ -10,14 +10,14 @@ warnings.filterwarnings('ignore')
 app = FastAPI()
 analyzer = SentimentIntensityAnalyzer()
 
-# 2. SECURITY: Allow React to talk to this Python server
+# The CORS Permission Slip
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=["*"],  # Allows requests from ANY website (perfect for the hackathon demo)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows GET, POST, etc.
     allow_headers=["*"],
 )
-
 @app.get("/api/hype")
 def get_live_hype():
     """Reads social_data.csv and calculates the leaderboard LIVE"""
