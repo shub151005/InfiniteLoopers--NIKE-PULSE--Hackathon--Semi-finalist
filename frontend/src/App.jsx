@@ -13,9 +13,9 @@ function App() {
     // This is the bridge between your React Frontend and Python Backend
     const fetchData = async () => {
       try {
-        const shieldRes = await axios.get('http://127.0.0.1:8000/api/shield')
-        const hypeRes = await axios.get('http://127.0.0.1:8000/api/hype')
-        const allocRes = await axios.get('http://127.0.0.1:8000/api/allocation')
+        const shieldRes = await axios.get('https://nike-pulse-engine.onrender.com/api/shield')
+        const hypeRes = await axios.get('https://nike-pulse-engine.onrender.com/api/hype')
+        const allocRes = await axios.get('https://nike-pulse-engine.onrender.com/api/allocation')
         
         setShield(shieldRes.data)
         setHype(hypeRes.data)
